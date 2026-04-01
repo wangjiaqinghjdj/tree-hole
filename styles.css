@@ -1192,16 +1192,16 @@ textarea.form-control {
   .app-shell {
     width: calc(100% - 18px);
     margin: 12px auto 28px;
-    padding: 16px;
+    padding: 12px;
   }
 
   .card-soft.p-4,
   .card-soft.p-3 {
-    padding: 18px !important;
+    padding: 14px !important;
   }
 
   h5 {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   h6 {
@@ -1250,11 +1250,11 @@ textarea.form-control {
   }
 
   .btn {
-    padding: 9px 14px;
+    padding: 8px 12px;
   }
 
   .nav-pill .btn {
-    padding: 9px 14px;
+    padding: 8px 12px;
   }
 
   .game-grid {
@@ -1335,12 +1335,12 @@ textarea.form-control {
 
   .app-shell {
     width: calc(100% - 14px);
-    padding: 14px;
+    padding: 10px;
   }
 
   .card-soft.p-4,
   .card-soft.p-3 {
-    padding: 16px !important;
+    padding: 12px !important;
   }
 
   .nav-pill {
@@ -1350,5 +1350,92 @@ textarea.form-control {
   .nav-pill .btn {
     padding: 8px 12px;
     font-size: 13px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.header-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-action {
+  width: 100%;
+  border-radius: 999px;
+  border: var(--glass-border);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  color: #425067;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--ease-soft);
+  position: relative;
+}
+
+.quick-action:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+.quick-action:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.quick-action.active {
+  background: linear-gradient(135deg, rgba(142, 154, 175, 0.22), rgba(119, 142, 113, 0.14));
+  border-color: rgba(255, 255, 255, 0.62);
+}
+
+.quick-action .ic {
+  line-height: 1;
+}
+
+.quick-action .tx {
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.quick-dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(233, 106, 95, 0.92);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: 0 10px 20px rgba(233, 106, 95, 0.18);
+}
+
+@media (max-width: 640px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .quick-action {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 }

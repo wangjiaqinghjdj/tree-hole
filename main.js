@@ -496,24 +496,6 @@ createApp({
   <div class="app-root" v-if="booted" :class="'weather-' + (weatherState || 'mist')">
     <div class="weather-layer" v-if="user"></div>
 
-    <div class="floating-right-actions" v-if="user">
-      <button v-if="weatherState==='rain'" class="action-fab rain-fab" :class="{ active: rainAudioOn }" @click="toggleRainAudio" :title="rainAudioOn ? '关闭雨声' : '开启雨声'">
-        <span class="fab-ic">🌧️</span>
-        <span class="fab-tx">{{ rainAudioOn ? "关雨" : "开雨" }}</span>
-      </button>
-
-      <button class="action-fab music-fab" :class="{ active: musicOn }" @click="toggleMusic" :title="musicOn ? '关闭音乐' : '开启音乐'">
-        <span class="fab-ic">🎵</span>
-        <span class="fab-tx">{{ musicOn ? "关乐" : "开乐" }}</span>
-      </button>
-
-      <button class="action-fab echo-fab" @click="openEcho">
-        <span class="fab-ic">🫙</span>
-        <span class="fab-tx">拾遗</span>
-        <span class="dot" v-if="echoPendingCount>0">{{ echoPendingCount }}</span>
-      </button>
-    </div>
-
     <div class="echo-mask" v-if="echoVisible" @click.self="closeEcho">
       <div class="echo-modal">
         <div class="section-title-row echo-title-row">
@@ -550,7 +532,32 @@ createApp({
           </div>
           <div class="d-flex gap-2 align-items-center" v-if="user">
             <span class="badge text-bg-light">{{ user.nickname || user.username }}</span>
-            <button class="btn btn-outline-secondary btn-soft" @click="logout">暂别，等候你的下次倾诉</button>
+            <div class="header-actions">
+              <button class="btn btn-outline-secondary btn-soft w-100" @click="logout">暂别，等候你的下次倾诉</button>
+              <div class="header-quick-actions">
+                <button
+                  v-if="weatherState==='rain'"
+                  class="quick-action"
+                  :class="{ active: rainAudioOn }"
+                  @click="toggleRainAudio"
+                  :title="rainAudioOn ? '关闭雨声' : '开启雨声'"
+                >
+                  <span class="ic">🌧️</span>
+                  <span class="tx">{{ rainAudioOn ? "雨声已开" : "开启雨声" }}</span>
+                </button>
+
+                <button class="quick-action" :class="{ active: musicOn }" @click="toggleMusic" :title="musicOn ? '关闭音乐' : '开启音乐'">
+                  <span class="ic">🎵</span>
+                  <span class="tx">{{ musicOn ? "音乐已开" : "开启音乐" }}</span>
+                </button>
+
+                <button class="quick-action" @click="openEcho" title="打开拾遗">
+                  <span class="ic">🫙</span>
+                  <span class="tx">拾遗</span>
+                  <span class="quick-dot" v-if="echoPendingCount>0">{{ echoPendingCount }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
