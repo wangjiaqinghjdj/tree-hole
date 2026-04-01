@@ -177,8 +177,9 @@ body::before {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    /* Use none so any position:fixed descendants stay fixed to viewport on mobile */
+    transform: none;
+    filter: none;
   }
 }
 
@@ -1282,34 +1283,15 @@ textarea.form-control {
     transform: none !important;
   }
 
-  .echo-fab,
-  .music-fab {
-    right: 14px;
-    width: 62px;
-    height: 62px;
-  }
-
-  .echo-fab {
-    bottom: 14px;
-  }
-
-  .music-fab {
-    bottom: 86px;
-  }
-
   .floating-right-actions {
     top: auto;
-    bottom: 20px;
-    right: 50%;
-    transform: translateX(50%);
-    flex-direction: row;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
+    transform: none;
+    flex-direction: column;
     gap: 10px;
-    justify-content: center;
-    width: 100%;
-    pointer-events: none;
-  }
-
-  .floating-right-actions > * {
+    justify-content: flex-end;
+    width: auto;
     pointer-events: auto;
   }
 
@@ -1333,6 +1315,16 @@ textarea.form-control {
 
   .fab-ic {
     font-size: 20px;
+  }
+
+  .action-fab.echo-fab {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-fab.echo-fab {
+    animation: none;
   }
 }
 
