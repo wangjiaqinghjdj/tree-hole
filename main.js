@@ -19,6 +19,7 @@ createApp({
       rainNodes: null,
       musicOn: false,
       musicNodes: null,
+      musicEl: null,
       authMode: "login",
       auth: { username: "", password: "", aiName: "小树", aiPersona: "温柔小姐姐" },
       moods: [],
@@ -423,70 +424,35 @@ createApp({
     },
     startMusic() {
       try {
-        if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const ctx = this.audioCtx;
-        if (ctx.state === "suspended") ctx.resume();
-
-        const master = ctx.createGain();
-        master.gain.value = 0.0001;
-
-        const lowpass = ctx.createBiquadFilter();
-        lowpass.type = "lowpass";
-        lowpass.frequency.value = 920;
-        lowpass.Q.value = 0.65;
-
-        const tones = [
-          { freq: 196.0, type: "sine", gain: 0.55 }, // G3
-          { freq: 246.94, type: "sine", gain: 0.36 }, // B3
-          { freq: 293.66, type: "triangle", gain: 0.22 } // D4
-        ];
-
-        const oscNodes = tones.map((t) => {
-          const o = ctx.createOscillator();
-          o.type = t.type;
-          o.frequency.value = t.freq;
-          const g = ctx.createGain();
-          g.gain.value = t.gain;
-          o.connect(g);
-          g.connect(lowpass);
-          return { o, g };
-        });
-
-        // Slow "breathing" envelope (15s cycle).
-        const schedule = () => {
-          const now = ctx.currentTime;
-          master.gain.cancelScheduledValues(now);
-          master.gain.setValueAtTime(0.0001, now);
-          master.gain.linearRampToValueAtTime(0.095, now + 2.8);
-          master.gain.linearRampToValueAtTime(0.06, now + 7.5);
-          master.gain.linearRampToValueAtTime(0.09, now + 12.5);
-          master.gain.linearRampToValueAtTime(0.05, now + 15.0);
-        };
-        schedule();
-        const interval = setInterval(() => {
-          try {
-            schedule();
-          } catch (_) {}
-        }, 15000);
-
-        lowpass.connect(master);
-        master.connect(ctx.destination);
-
-        oscNodes.forEach(({ o }) => o.start());
-        this.musicNodes = { master, lowpass, oscNodes, interval };
-        this.musicOn = true;
+        if (!this.musicEl) {
+          const a = new Audio("/music/ambient.mp3");
+          a.loop = true;
+          a.preload = "auto";
+          a.volume = 0.35;
+          this.musicEl = a;
+        }
+        const p = this.musicEl.play();
+        if (p && typeof p.then === "function") {
+          p.then(
+            () => {
+              this.musicOn = true;
+            },
+            () => {
+              // Autoplay may be blocked; keep state off.
+              this.musicOn = false;
+            }
+          );
+        } else {
+          this.musicOn = true;
+        }
       } catch (_) {}
     },
     stopMusic() {
       try {
-        if (this.musicNodes?.interval) clearInterval(this.musicNodes.interval);
-      } catch (_) {}
-      try {
-        this.musicNodes?.oscNodes?.forEach(({ o }) => {
-          try {
-            o.stop();
-          } catch (_) {}
-        });
+        if (this.musicEl) {
+          this.musicEl.pause();
+          this.musicEl.currentTime = 0;
+        }
       } catch (_) {}
       this.musicNodes = null;
       this.musicOn = false;

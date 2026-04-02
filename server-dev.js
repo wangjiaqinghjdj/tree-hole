@@ -146,6 +146,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "client_index.html")));
 app.get("/main.js", (req, res) => res.sendFile(path.join(__dirname, "main.js")));
 app.get("/styles.css", (req, res) => res.sendFile(path.join(__dirname, "styles.css")));
+// Ambient music (user-provided)
+app.get("/music/ambient.mp3", (req, res) => res.sendFile(path.join(__dirname, "1.mp3")));
 app.get("/vendor/vue.global.prod.js", (req, res) => res.sendFile(path.join(__dirname, "node_modules", "vue", "dist", "vue.global.prod.js")));
 app.get("/vendor/axios.min.js", (req, res) => res.sendFile(path.join(__dirname, "node_modules", "axios", "dist", "axios.min.js")));
 app.get("/vendor/echarts.min.js", (req, res) => res.sendFile(path.join(__dirname, "node_modules", "echarts", "dist", "echarts.min.js")));
