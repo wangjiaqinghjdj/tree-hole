@@ -51,6 +51,10 @@ createApp({
         aiSupportStyle: "共情倾听",
         aiTaboo: ""
       },
+      profileStats: { total: 0, publicMoods: 0, totalLikesReceived: 0, avgScore: 0 },
+      recentMoods: [],
+      profileEditVisible: false,
+      avatarUploading: false,
       moodSaving: false,
       isAdmin: false,
       adminUsers: []
@@ -360,11 +364,44 @@ createApp({
     async loadProfile() {
       const { data } = await api.get("/profile");
       this.profile = data.profile || this.profile;
+      this.profileStats = {
+        total: Number(data.total || 0),
+        publicMoods: Number(data.publicMoods || 0),
+        totalLikesReceived: Number(data.totalLikesReceived || 0),
+        avgScore: Number(data.avgScore || 0)
+      };
+      this.recentMoods = data.recentMoods || [];
+    },
+    openProfileEdit() {
+      this.profileEditVisible = true;
+      this.loadProfile();
+    },
+    closeProfileEdit() {
+      this.profileEditVisible = false;
     },
     async saveProfile() {
       await api.post("/profile", this.profile);
       await this.refreshMe();
+      this.profileEditVisible = false;
       alert("保存成功");
+    },
+    async uploadAvatar(e) {
+      const file = e?.target?.files?.[0];
+      if (!file) return;
+      this.avatarUploading = true;
+      try {
+        const fd = new FormData();
+        fd.append("avatar", file);
+        const { data } = await api.post("/profile/avatar", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        if (!data.ok) return alert(data.message || "上传失败");
+        this.profile.avatarUrl = data.avatarUrl;
+        await this.refreshMe();
+      } finally {
+        this.avatarUploading = false;
+        try {
+          e.target.value = "";
+        } catch (_) {}
+      }
     },
     async loadAdminUsers() {
       const { data } = await api.get("/admin/users");
@@ -827,73 +864,104 @@ createApp({
       </div>
 
       <div v-if="tab==='profile'" class="panel panel-profile">
-        <div class="row g-3">
-          <div class="col-lg-4">
-            <div class="card-soft p-4 profile-preview-card">
-              <div class="profile-avatar-wrap mb-3">
-                <img v-if="profile.avatarUrl" :src="profile.avatarUrl" alt="avatar" class="profile-avatar-img">
-                <div v-else class="profile-avatar-fallback">{{ (profile.nickname || user?.username || '我').slice(0,1) }}</div>
-              </div>
+        <div class="card-soft p-4 profile-card">
+          <div class="profile-top">
+            <div class="profile-avatar-wrap">
+              <img v-if="profile.avatarUrl" :src="profile.avatarUrl" alt="avatar" class="profile-avatar-img">
+              <div v-else class="profile-avatar-fallback">{{ (profile.nickname || user?.username || '我').slice(0,1) }}</div>
+            </div>
+            <div class="profile-top-main">
               <div class="profile-name">{{ profile.nickname || user?.username || '未设置昵称' }}</div>
-              <div class="profile-bio">{{ profile.bio || '写一段简介，让这个树洞更像你。' }}</div>
-              <div class="profile-ai-pill mt-3">陪伴AI：{{ profile.aiName || '小树' }} · {{ profile.aiPersona || '温柔小姐姐' }}</div>
+              <div class="profile-stats">
+                <div class="stat-pill"><span class="k">发帖</span><span class="v">{{ profileStats.total || 0 }}</span></div>
+                <div class="stat-pill"><span class="k">抱抱</span><span class="v">{{ profileStats.totalLikesReceived || 0 }}</span></div>
+                <div class="stat-pill"><span class="k">公开</span><span class="v">{{ profileStats.publicMoods || 0 }}</span></div>
+              </div>
             </div>
           </div>
-          <div class="col-lg-8">
-            <div class="card-soft p-4 profile-edit-card">
-              <h6 class="mb-3">编辑资料</h6>
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">昵称</label>
-                  <input class="form-control" v-model="profile.nickname" placeholder="例如：晚风">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">头像 URL</label>
-                  <input class="form-control" v-model="profile.avatarUrl" placeholder="https://...">
-                </div>
-                <div class="col-12">
-                  <label class="form-label small text-muted">个人简介</label>
-                  <textarea class="form-control" rows="3" v-model="profile.bio" placeholder="简单介绍一下现在的你"></textarea>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">AI 名字</label>
-                  <input class="form-control" v-model="profile.aiName" placeholder="例如：木木">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">AI 性格</label>
-                  <select class="form-control" v-model="profile.aiPersona">
-                    <option>温柔小姐姐</option>
-                    <option>理性教练</option>
-                    <option>安静倾听者</option>
-                    <option>幽默伙伴</option>
-                  </select>
-                </div>
 
-                <div class="col-12">
-                  <div class="ai-profile-head">AI 关怀档案</div>
-                  <div class="small text-muted">让 AI 更懂你：称呼、陪伴方式、以及你不想被触碰的雷区。</div>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">希望 AI 怎么称呼你</label>
-                  <input class="form-control" v-model="profile.aiAddressing" placeholder="例如：小鱼 / 你 / 我自己">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small text-muted">偏好的陪伴方式</label>
-                  <select class="form-control" v-model="profile.aiSupportStyle">
-                    <option>共情倾听</option>
-                    <option>理性梳理</option>
-                    <option>行动计划</option>
-                    <option>轻松陪伴</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <label class="form-label small text-muted">不想被提及的内容（可选）</label>
-                  <textarea class="form-control" rows="2" v-model="profile.aiTaboo" placeholder="例如：不要用说教口吻 / 不要提起某个人 / 不要轻易下结论"></textarea>
-                </div>
+          <div class="profile-sign">
+            <div class="label">个性签名</div>
+            <div class="text">{{ profile.bio || "写一段简介，让这个树洞更像你。" }}</div>
+          </div>
+
+          <div class="profile-recent">
+            <div class="label">最近的 3 条发帖</div>
+            <div class="recent-empty text-muted" v-if="!recentMoods || recentMoods.length===0">还没有发帖记录，先写下今天的第一句心情。</div>
+            <div class="recent-item" v-for="r in recentMoods" :key="r.id">
+              <div class="meta">{{ fmt(r.createTime || r.create_time) }} · {{ r.aiTag || r.ai_tag }} · {{ r.moodScore || r.mood_score || 0 }}/100</div>
+              <div class="content">"{{ r.content }}"</div>
+              <div class="bubble bubble-comment bubble-block mt-2" v-if="r.aiComment || r.ai_comment">
+                <div class="ai-label">{{ aiDisplayName }} 的温暖评语</div>
+                <div>{{ r.aiComment || r.ai_comment }}</div>
               </div>
-              <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-primary btn-soft" @click="saveProfile">保存资料</button>
+            </div>
+          </div>
+
+          <div class="profile-bottom">
+            <button class="btn btn-primary btn-soft w-100" @click="openProfileEdit">编辑资料</button>
+          </div>
+        </div>
+
+        <div class="modal-mask" v-if="profileEditVisible" @click.self="closeProfileEdit">
+          <div class="modal-card">
+            <div class="modal-head">
+              <div class="title">编辑资料</div>
+              <button class="icon-btn" @click="closeProfileEdit" title="关闭" aria-label="关闭"><span class="mini-ic">X</span><span class="label">关闭</span></button>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">昵称</label>
+                <input class="form-control" v-model="profile.nickname" placeholder="例如：晚风">
               </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">头像文件</label>
+                <input class="form-control" type="file" accept="image/*" :disabled="avatarUploading" @change="uploadAvatar">
+                <div class="text-muted small mt-1" v-if="avatarUploading">正在上传头像，请稍等…</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted">个性签名</label>
+                <textarea class="form-control" rows="3" v-model="profile.bio" placeholder="简单介绍一下现在的你"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">AI 名字</label>
+                <input class="form-control" v-model="profile.aiName" placeholder="例如：木木">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">AI 性格</label>
+                <select class="form-control" v-model="profile.aiPersona">
+                  <option>温柔小姐姐</option>
+                  <option>理性教练</option>
+                  <option>安静倾听者</option>
+                  <option>幽默伙伴</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <div class="ai-profile-head">AI 关怀档案</div>
+                <div class="small text-muted">让 AI 更懂你：称呼、陪伴方式、以及你不想被触碰的雷区。</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">希望 AI 怎么称呼你</label>
+                <input class="form-control" v-model="profile.aiAddressing" placeholder="例如：小鱼 / 你 / 我自己">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">偏好的陪伴方式</label>
+                <select class="form-control" v-model="profile.aiSupportStyle">
+                  <option>共情倾听</option>
+                  <option>理性梳理</option>
+                  <option>行动计划</option>
+                  <option>轻松陪伴</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted">不想被提及的内容（可选）</label>
+                <textarea class="form-control" rows="2" v-model="profile.aiTaboo" placeholder="例如：不要用说教口吻 / 不要提起某个人 / 不要轻易下结论"></textarea>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-light btn-soft" @click="closeProfileEdit">先不改</button>
+              <button class="btn btn-primary btn-soft" :disabled="avatarUploading" @click="saveProfile">保存资料</button>
             </div>
           </div>
         </div>

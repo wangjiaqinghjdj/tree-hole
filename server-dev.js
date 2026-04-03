@@ -971,13 +971,19 @@ app.get("/api/profile", needLogin, async (req, res) => {
   const [[s1]] = await p.query("SELECT COUNT(*) total, COALESCE(AVG(mood_score),0) avgScore FROM mood_records WHERE user_id=?", [uid]);
   const [[s2]] = await p.query("SELECT COUNT(*) publicMoods FROM mood_records WHERE user_id=? AND is_public=1", [uid]);
   const [[s3]] = await p.query("SELECT COUNT(*) totalLikesReceived FROM likes WHERE mood_id IN (SELECT id FROM mood_records WHERE user_id=?)", [uid]);
+  const [recent] = await p.query(
+    "SELECT id, content, ai_tag aiTag, mood_score moodScore, ai_comment aiComment, ai_practice aiPractice, ai_action aiAction, create_time createTime " +
+      "FROM mood_records WHERE user_id=? ORDER BY create_time DESC LIMIT 3",
+    [uid]
+  );
   res.json({
     ok: true,
     profile: { ...u, aiChatEnabled: u.ai_chat_enabled === 1, publicSquareEnabled: u.public_square_enabled === 1 },
     ...s1,
     ...s2,
     ...s3,
-    profileAlias: `树洞旅人 ${String(Math.abs(uid % 100)).padStart(2, "0")}`
+    profileAlias: `树洞旅人 ${String(Math.abs(uid % 100)).padStart(2, "0")}`,
+    recentMoods: recent || []
   });
 });
 app.post("/api/profile", needLogin, async (req, res) => {
