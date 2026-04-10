@@ -885,11 +885,11 @@ app.post("/api/ai/chat", needLogin, async (req, res) => {
 app.get("/api/graph", needLogin, async (req, res) => {
   const p = await conn();
   const [rows] = await p.query(
-    "SELECT DATE(create_time) dt, AVG(mood_score) avg_score FROM mood_records " +
-    "WHERE user_id=? AND create_time>=DATE_SUB(CURDATE(), INTERVAL 7 DAY) GROUP BY DATE(create_time) ORDER BY dt ASC",
+    "SELECT DATE_FORMAT(DATE(create_time), '%Y-%m-%d') dt, AVG(mood_score) avg_score FROM mood_records " +
+    "WHERE user_id=? AND create_time>=DATE_SUB(CURDATE(), INTERVAL 7 DAY) GROUP BY DATE_FORMAT(DATE(create_time), '%Y-%m-%d') ORDER BY dt ASC",
     [req.session.user.id]
   );
-  res.json({ ok: true, dates: rows.map((x) => String(x.dt).slice(5, 10)), scores: rows.map((x) => Number(x.avg_score || 0)) });
+  res.json({ ok: true, dates: rows.map((x) => String(x.dt || "")), scores: rows.map((x) => Number(x.avg_score || 0)) });
 });
 
 app.get("/api/echo", needLogin, async (req, res) => {

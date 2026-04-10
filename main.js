@@ -983,6 +983,7 @@ createApp({
           </tbody>
         </table>
       </div>
+    </template>
     </div>
   </div>`
 }).mount("#app");
